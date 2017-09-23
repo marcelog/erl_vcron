@@ -1,0 +1,15 @@
+{application, erl_vcron, [
+  {description, "Vixie Cron-like expression interpreter"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [
+    kernel,
+    stdlib
+  ]},
+  {env,[]},
+  {modules, []},
+
+  {maintainers, ["Marcelo Gornstein"]},
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+]}.
