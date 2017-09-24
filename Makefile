@@ -2,7 +2,7 @@ CWD=$(shell pwd)
 ROOT?=${CWD}
 REBAR?=${ROOT}/rebar3.1
 
-all: clean dialyzer xref tests cover
+all: get_deps clean dialyzer xref tests cover
 
 run: get_deps shell
 
