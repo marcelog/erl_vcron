@@ -10,6 +10,7 @@ Just run `make`.
 
 # Examples
 ```
+1> erl_vcron:applies({{2017, 07, 10}, {4, 15, 0}}, "*/5 2-4 10,15 7 1").
 ```
 
 There are many more examples in the [eunit tests](https://github.com/marcelog/erl_vcron/blob/master/test/erl_vcron_test.erl).
