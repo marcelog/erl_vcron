@@ -31,6 +31,19 @@
 matches_all_wildcards_test() ->
   assert({{2017, 09, 23}, {0, 1, 0}}, "* * * * *").
 
+complex_test() ->
+  % Every 5 minutes
+  % Only between 2am to 4am
+  % Only on the 10th or 15th of the month
+  % Only during July
+  % Only on Monday
+  Expression = "*/5 2-4 10,15 7 1",
+  assert({{2017, 07, 10}, {2, 15, 0}}, Expression),
+  refute({{2017, 07, 10}, {2, 16, 0}}, Expression),
+  refute({{2017, 07, 10}, {5, 15, 0}}, Expression),
+  refute({{2017, 07, 10}, {1, 15, 0}}, Expression),
+  refute({{2017, 07, 11}, {2, 15, 0}}, Expression).
+
 % X
 exact_test() ->
   minute_exact(),

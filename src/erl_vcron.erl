@@ -70,12 +70,23 @@ applies(
 applies_standard(_Number, _Max, "*") ->
   true;
 
+% In vixie-cron, slashes can be combined with ranges to specify step values.
+% For example, */5 in the minutes field indicates every 5 minutes. It is
+% shorthand for the more verbose POSIX form 5,10,15,20,25,30,35,40,45,50,55,00.
+% POSIX does not define a use for slashes; its rationale (commenting on a
+% BSD extension) notes that the definition is based on System V format
+% but does not exclude the possibility of extensions
 applies_standard(Number, Max, [$*, $/|Interval]) ->
   List = generate_from_interval(list_to_integer(Interval), Max),
   is_in_list(Number, List);
 
 applies_standard(Number, _Max, String) ->
+  % Commas are used to separate items of a list. For example,
+  % using "MON,WED,FRI" in the 5th field (day of week) means
+  % Mondays, Wednesdays and Fridays.
   IsList = string:tokens(String, ","),
+  % Hyphens define ranges. For example, 2000-2010
+  % indicates every year between 2000 and 2010, inclusive.
   IsRange = string:tokens(String, "-"),
   List = if
     length(IsList) > 1 ->
