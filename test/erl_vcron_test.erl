@@ -31,6 +31,23 @@
 matches_all_wildcards_test() ->
   assert({{2017, 09, 23}, {0, 1, 0}}, "* * * * *").
 
+% X
+exact_test() ->
+  minute_exact(),
+  hour_exact(),
+  day_of_month_exact(),
+  month_exact(),
+  day_of_week_exact().
+
+% X,Y,Z
+list_test() ->
+  minute_list(),
+  hour_list(),
+  day_of_month_list(),
+  month_list(),
+  day_of_week_list().
+
+% X-Y
 range_test() ->
   minute_range(),
   hour_range(),
@@ -38,6 +55,7 @@ range_test() ->
   month_range(),
   day_of_week_range().
 
+% X/Y
 interval_test() ->
   minute_interval(),
   hour_interval(),
@@ -48,10 +66,80 @@ interval_test() ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Private API.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+minute_exact() ->
+  Expression = "0 * * * *",
+  assert({{2017, 09, 23}, {0, 0, 0}}, Expression),
+  refute({{2017, 09, 23}, {0, 1, 0}}, Expression).
+
+hour_exact() ->
+  Expression = "* 0 * * *",
+  assert({{2017, 09, 23}, {0, 0, 0}}, Expression),
+  refute({{2017, 09, 23}, {1, 0, 0}}, Expression).
+
+day_of_month_exact() ->
+  Expression = "* * 15 * *",
+  assert({{2017, 09, 15}, {0, 0, 0}}, Expression),
+  refute({{2017, 09, 16}, {0, 0, 0}}, Expression).
+
+month_exact() ->
+  Expression = "* * * 6 *",
+  assert({{2017, 06, 1}, {0, 0, 0}}, Expression),
+  refute({{2017, 09, 1}, {0, 0, 0}}, Expression).
+
+day_of_week_exact() ->
+  Expression = "* * * * 0",
+  assert({{2017, 10, 1}, {0, 0, 0}}, Expression),
+  refute({{2017, 10, 2}, {0, 0, 0}}, Expression).
+
+minute_list() ->
+  Expression = "0,5,10,15 * * * *",
+  {True, False} = lists:partition(
+    fun(E) -> E =< 15 andalso E rem 5 =:= 0 end,
+    lists:seq(0, 59)
+  ),
+  assert_list(minute, True, Expression),
+  refute_list(minute, False, Expression).
+
+hour_list() ->
+  Expression = "* 0,5,10,15 * * *",
+  {True, False} = lists:partition(
+    fun(E) -> E =< 15 andalso E rem 5 =:= 0 end,
+    lists:seq(0, 59)
+  ),
+  assert_list(hour, True, Expression),
+  refute_list(hour, False, Expression).
+
+day_of_month_list() ->
+  Expression = "* * 5,10,15 * *",
+  {True, False} = lists:partition(
+    fun(E) -> E =< 15 andalso E rem 5 =:= 0 end,
+    lists:seq(1, 31)
+  ),
+  assert_list(day, True, Expression),
+  refute_list(day, False, Expression).
+
+month_list() ->
+  Expression = "* * * 6,7 *",
+  {True, False} = lists:partition(
+    fun(E) -> E =:= 6 orelse E =:= 7 end,
+    lists:seq(1, 12)
+  ),
+  assert_list(month, True, Expression),
+  refute_list(month, False, Expression).
+
+day_of_week_list() ->
+  Expression = "* * * * 0,6",
+  {True, False} = lists:partition(
+    fun(E) -> E >= 7 end,
+    lists:seq(2, 8)
+  ),
+  assert_list(day, True, Expression),
+  refute_list(day, False, Expression).
+
 day_of_week_interval() ->
   Expression = "* * * * */2",
-  assert_list(day, lists:seq(2, 6), Expression),
-  refute_list(day, [7, 8], Expression).
+  assert_list(day, [1, 3, 5, 7], Expression),
+  refute_list(day, [2, 4, 6], Expression).
 
 month_interval() ->
   Expression = "* * * */6 *",
@@ -109,17 +197,18 @@ test_interval(What, Min, Max, Interval, Expression) ->
     fun(E) -> E rem Interval =/= 0 end,
     lists:seq(Min, Max)
   ),
-  io:format("False list: ~p~n", [False]),
+  %io:format("False list: ~p~n", [False]),
   refute_list(What, False, Expression),
 
   True = lists:filter(
     fun(E) -> E rem Interval =:= 0 end,
     lists:seq(Min, Max)
   ),
-  io:format("True list: ~p~n", [True]),
+  %io:format("True list: ~p~n", [True]),
   assert_list(What, True, Expression).
 
 test_for_list(Result, What, List, Expression) ->
+  io:format("Expecting list of ~p ~p to be ~p~n", [What, List, Result]),
   _ = lists:foreach(
     fun(X) ->
       DateTime = case What of
@@ -136,8 +225,8 @@ test_for_list(Result, What, List, Expression) ->
 assert(DateTime, Expression) ->
   test_for(true, DateTime, Expression).
 
-%refute(DateTime, Expression) ->
-%  test_for(false, DateTime, Expression).
+refute(DateTime, Expression) ->
+  test_for(false, DateTime, Expression).
 
 test_for(Result, DateTime, Expression) ->
   RealResult = erl_vcron:applies(DateTime, Expression),

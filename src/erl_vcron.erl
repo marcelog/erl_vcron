@@ -118,6 +118,5 @@ generate_from_interval(Current, Max, Interval, Acc) ->
 %% @doc true if the given list contains the element.
 -spec is_in_list(non_neg_integer(), [non_neg_integer()]) -> boolean().
 is_in_list(Element, List) ->
-io:format("AAAA: ~p vs ~p~n", [Element, List]),
   Result = lists:filter(fun(E) -> Element =:= E end, List),
   length(Result) > 0.
